@@ -6,7 +6,7 @@ const SectionHeader = ({ title }) => {
     const theme = Colors[useColorScheme() ?? 'light'];
 
     return (
-        <Text style={[styles.text, { color: theme.muted }]}>
+        <Text style={[styles.text, { color: theme.dontKnow }]}>
         {title.toUpperCase()}
         </Text>
     );

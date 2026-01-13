@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  View, 
-  TouchableOpacity, 
-  StyleSheet, 
-  StatusBar, 
-  useColorScheme, 
-  SafeAreaView, 
-  Image, 
-  Text, 
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  StatusBar,
+  useColorScheme,
+  SafeAreaView,
+  Image,
+  Text,
   TextInput,
   Modal,
 } from 'react-native';
@@ -24,23 +24,8 @@ const Header = () => {
   const [searchValue, setSearchValue] = useState('');
   const inputRef = useRef(null);
 
-  const pathname = usePathname(); // ejemplo: /main/quran o /adhkar/sunnah
-  
-  // Determinar sección basada en la ruta actual
-  const getSection = () => {
-    if (pathname.includes('quran')) return 'quran';
-    if (pathname.includes('sunnah')) return 'sunnah';
-    return 'all';
-  };
-  
-  const section = getSection();
+  const pathname = usePathname();
 
-  // Search icon siempre visible
-  const icons = [
-    { name: 'search-outline' },
-  ];
-
-  // cerrar search al cambiar de ruta
   useEffect(() => {
     setSearchMenu(false);
   }, [pathname]);
@@ -51,7 +36,7 @@ const Header = () => {
 
       <SafeAreaView style={{ backgroundColor: theme.background }}>
         <ThemedView style={[styles.container, { backgroundColor: theme.background }]}>
-          {/* Left: Logo */}
+          {/* Left */}
           <View style={styles.left}>
             <Image
               source={require('../../assets/images/quranic-logo-horizontal.png')}
@@ -59,25 +44,30 @@ const Header = () => {
             />
           </View>
 
-          {/* Right: Icons */}
+          {/* Right */}
           <View style={styles.right}>
-            {icons.map((icon) => (
+            <TouchableOpacity
+              onPress={() => setSearchMenu(true)}
+              style={styles.icon}
+            >
+              <Ionicons name="search-outline" size={24} color={theme.text} />
+            </TouchableOpacity>
+            <Link href={`/secondary/scheme`} asChild>
               <TouchableOpacity
-                key={icon.name}
-                onPress={() => setSearchMenu(true)} // abrir modal
                 style={styles.icon}
               >
-                <Ionicons name={icon.name} size={24} color={theme.text} />
+                <Ionicons name="moon-outline" size={24} color={theme.text} />
               </TouchableOpacity>
-            ))}
-            <Link style={styles.headerIcon} href={`/secondary/settings?back=${pathname}`} asChild>
-              <TouchableOpacity style={styles.icon}>
+            </Link>
+            <Link href={`/secondary/settings?back=${pathname}`} asChild>
+              <TouchableOpacity style={[styles.icon, styles.headerIcon]}>
                 <Ionicons name="settings-outline" size={24} color={theme.text} />
               </TouchableOpacity>
             </Link>
           </View>
         </ThemedView>
       </SafeAreaView>
+      
 
       {/* Search Modal */}
       <Modal
@@ -86,35 +76,82 @@ const Header = () => {
         transparent={true}
         onRequestClose={() => setSearchMenu(false)}
       >
-        <ThemedView style={styles.searchOverlay}>
-          <View style={styles.searchSheet}>
-            <View style={styles.searchHeader}>
-              <Ionicons name='search-outline' size={24} />
+        <ThemedView
+          style={[
+            styles.searchOverlay,
+            {
+              backgroundColor:
+                scheme === 'dark'
+                  ? 'rgba(0,0,0,0.6)'
+                  : 'rgba(0,0,0,0.25)',
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.searchSheet,
+              { backgroundColor: theme.surface },
+            ]}
+          >
+            <View
+              style={[
+                styles.searchHeader,
+                { borderBottomColor: theme.border },
+              ]}
+            >
+              <Ionicons
+                name="search-outline"
+                size={24}
+                color={theme.icon}
+              />
+
               <TextInput
                 ref={inputRef}
-                autoFocus={true} // abre teclado automáticamente
-                placeholder={
-                  section === 'quran'
-                    ? 'Search Quran...'
-                    : section === 'sunnah'
-                    ? 'Search Sunnah Here...'
-                    : 'Search...'
-                }
-                placeholderTextColor={theme.title}
+                autoFocus
+                placeholder='Search...'
+                placeholderTextColor={theme.muted}
                 value={searchValue}
                 onChangeText={setSearchValue}
-                style={styles.input}
+                style={[
+                  styles.input,
+                  { color: theme.text },
+                ]}
               />
+
               <TouchableOpacity onPress={() => setSearchMenu(false)}>
-                <Ionicons name="close-outline" size={34} />
+                <Ionicons
+                  name="close-outline"
+                  size={34}
+                  color={theme.icon}
+                />
               </TouchableOpacity>
             </View>
 
-            {/* Aquí podrías agregar resultados filtrados si quieres */}
             <View style={{ flex: 1, padding: 16 }}>
-              {searchValue.length > 0 && (
-                <Text style={{ color: theme.text }}>Searching for "{searchValue}" in {section}</Text>
-              )}
+              {searchValue.length > 0 ? (
+                <Text style={{ color: theme.text }}>
+                  Searching for "{searchValue}"
+                </Text>
+              ) 
+              : 
+              <View>
+                <Text style={[styles.searchExamples, { color: theme.text }]}>
+                  Examples...
+                </Text>
+                <Text style={[styles.searchExamples, { color: theme.text }]}>
+                  Al-Fatiha, Surah 55, 6:23
+                </Text>
+                <Text style={[styles.searchExamples, { color: theme.text }]}>
+                  bukhari 552, nasai 123, abudawud 598,
+                </Text>
+                <Text style={[styles.searchExamples, { color: theme.text }]}>
+                  muslim 123, tirmidhi 332, ibnmajah 52,
+                </Text>
+                <Text style={[styles.searchExamples, { color: theme.text }]}>
+                  malik 61, nawawi 31, qudsi 10
+                </Text>
+              </View>
+              }
             </View>
           </View>
         </ThemedView>
@@ -139,23 +176,22 @@ const styles = StyleSheet.create({
   },
   right: {
     flexDirection: 'row',
-    paddingRight: 33,
+    paddingRight: 35,
     marginLeft: 10,
   },
   icon: {
     justifyContent: 'center',
     alignItems: 'center',
+    paddingRight: 10
   },
   headerIcon: {
     marginLeft: 8,
   },
   searchOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.25)',
     justifyContent: 'flex-end',
   },
   searchSheet: {
-    backgroundColor: '#fff',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     height: '80%',
@@ -167,7 +203,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderBottomWidth: 0.5,
-    borderBottomColor: '#DDD',
+  },
+  searchExamples:{
+    marginBottom: 7
   },
   input: {
     flex: 1,

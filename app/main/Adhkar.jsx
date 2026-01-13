@@ -186,15 +186,16 @@ const Adhkar = () => {
 export default Adhkar;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingVertical: 10, paddingHorizontal : 16, gap: 16 },
+  container: { flex: 1, paddingVertical: 10, paddingHorizontal : 4 },
   
-  selectorScroll: { gap: 10 },
+  selectorScroll: { paddingLeft: 2 },
 
   selectorButton: {
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 16,
     borderWidth: 1,
+    marginLeft: 12
   },
   selectorText: { fontSize: 14, fontWeight: '600' },
 
@@ -203,6 +204,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     padding: 20,
     elevation: 12,
+    marginTop: 14
   },
 
   adhkarBlock: {

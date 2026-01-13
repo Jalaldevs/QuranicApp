@@ -1,8 +1,13 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
 import React, { useState } from 'react';
 import ThemedView from '../components/ThemedView';
 import SecondaryHeader from '../components/SecondaryHeader';
+import Colors from '../constants/Colors';
+
 const Tasbeeh = () => {
+    const scheme = useColorScheme();
+    const theme = scheme === 'dark' ? Colors.dark : Colors.light;
+
     const [count, setCount] = useState(0);
 
     const increment = () => {
@@ -19,14 +24,14 @@ const Tasbeeh = () => {
     return (
       <>
         <SecondaryHeader/>
-        <ThemedView style={styles.container}>
+        <Pressable onPress={increment} style={styles.container}>
           <Pressable onPress={increment} style={styles.counterButton}>
               <Text style={styles.countText}>{count}</Text>
           </Pressable>
           <Pressable onPress={reset} style={styles.resetButton}>
-              <Text style={styles.resetText}>Reset</Text>
+              <Text style={[styles.resetText, {backgroundColor: theme.dontKnow}]}>Reset</Text>
           </Pressable>
-        </ThemedView>
+        </Pressable>
       </>
     );
 };
@@ -57,12 +62,14 @@ const styles = StyleSheet.create({
   resetButton: {
     paddingHorizontal: 34,
     paddingVertical: 12,
-    backgroundColor: '#0b98cfff',
     borderRadius: 12,
   },
   resetText: {
     color: '#f8f0f0ff',
     fontWeight: '700',
     fontSize: 20,
+    padding: 13,
+    paddingHorizontal: 40,
+    borderRadius: 22
   },
 });

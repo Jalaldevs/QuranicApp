@@ -9,11 +9,12 @@ import {
   Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+
 import Header from '../components/Header';
 import ThemedView from '../components/ThemedView';
 import ThemedCard from '../components/ThemedCard';
 import Colors from '../constants/Colors';
-import * as Location from 'expo-location';
 
 const Home = () => {
   const scheme = useColorScheme();
@@ -21,7 +22,7 @@ const Home = () => {
 
   const [prayerTimes, setPrayerTimes] = useState({
     Fajr: '--',
-    Ishraq: '--',
+    Sunrise: '--',
     Dhuhr: '--',
     Asr: '--',
     Maghrib: '--',
@@ -35,11 +36,13 @@ const Home = () => {
   const [userCity, setUserCity] = useState('Fetching...');
   const [locationGranted, setLocationGranted] = useState(false);
   const [loadingLocation, setLoadingLocation] = useState(false);
+
   const [nextPrayer, setNextPrayer] = useState({ name: '', time: '' });
   const [countdown, setCountdown] = useState('00:00:00');
+
   const [notifications, setNotifications] = useState({
     Fajr: false,
-    Ishraq: false,
+    Sunrise: false,
     Dhuhr: false,
     Asr: false,
     Maghrib: false,
@@ -64,7 +67,6 @@ const Home = () => {
           ? [{ text: 'Try Again', onPress: getUserLocation }]
           : [{ text: 'Open Settings', onPress: () => Linking.openSettings() }]
       );
-
       return null;
     }
 
@@ -98,13 +100,13 @@ const Home = () => {
   const fetchPrayerTimes = async ({ latitude, longitude }) => {
     try {
       const res = await fetch(
-        `https://api.aladhan.com/v1/timings?latitude=${latitude}&longitude=${longitude}&method=3&school=0&latitudeAdjustmentMethod=ANGLE_BASED`
+        `https://api.aladhan.com/v1/timings?latitude=${latitude}&longitude=${longitude}&method=3&school=0`
       );
       const data = await res.json();
 
       setPrayerTimes({
         Fajr: data.data.timings.Fajr,
-        Ishraq: data.data.timings.Sunrise,
+        Sunrise: data.data.timings.Sunrise,
         Dhuhr: data.data.timings.Dhuhr,
         Asr: data.data.timings.Asr,
         Maghrib: data.data.timings.Maghrib,
@@ -125,19 +127,18 @@ const Home = () => {
   // ---------------- NEXT PRAYER ----------------
 
   const PRAYER_ICONS = {
-    Fajr: 'cloudy-night-outline',
-    Ishraq: 'partly-sunny-outline',
-    Dhuhr: 'sunny-outline',
-    Asr: 'partly-sunny-outline',
-    Maghrib: 'cloudy-night-outline',
-    Isha: 'moon-outline',
+    Fajr: 'cloudy-night',
+    Sunrise: 'partly-sunny',
+    Dhuhr: 'sunny',
+    Asr: 'partly-sunny',
+    Maghrib: 'cloudy-night',
+    Isha: 'moon',
   };
-
 
   const getNextPrayerTime = () => {
     const prayers = [
       { name: 'Fajr', time: prayerTimes.Fajr },
-      { name: 'Ishraq', time: prayerTimes.Ishraq },
+      { name: 'Sunrise', time: prayerTimes.Sunrise },
       { name: 'Dhuhr', time: prayerTimes.Dhuhr },
       { name: 'Asr', time: prayerTimes.Asr },
       { name: 'Maghrib', time: prayerTimes.Maghrib },
@@ -147,27 +148,33 @@ const Home = () => {
     const now = new Date();
 
     for (const prayer of prayers) {
+      if (!prayer.time || prayer.time === '--') continue;
+
       const [h, m] = prayer.time.split(':').map(Number);
       const date = new Date();
       date.setHours(h, m, 0, 0);
 
-      if (date.getTime() - now.getTime() > -1000) {
+      if (date > now) {
         updateCountdown(prayer, date);
         return;
       }
-
     }
 
-    const [h, m] = prayerTimes.Fajr.split(':').map(Number);
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(h, m, 0, 0);
+    // fallback → next day's Fajr
+    if (prayerTimes.Fajr !== '--') {
+      const [h, m] = prayerTimes.Fajr.split(':').map(Number);
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(h, m, 0, 0);
 
-    updateCountdown({ name: 'Fajr', time: prayerTimes.Fajr }, tomorrow);
+      updateCountdown({ name: 'Fajr', time: prayerTimes.Fajr }, tomorrow);
+    }
   };
 
   const updateCountdown = (prayer, date) => {
     const diff = date - new Date();
+    if (diff <= 0) return;
+
     const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
     const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
     const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
@@ -206,7 +213,7 @@ const Home = () => {
               if (coords) fetchPrayerTimes(coords);
             }}
           >
-            <Text style={[styles.heroLabel, { color: theme.iconFocused }]}>
+            <Text style={[styles.heroLabel, { color: theme.dontKnow }]}>
               {loadingLocation
                 ? 'Getting location...'
                 : locationGranted
@@ -215,18 +222,17 @@ const Home = () => {
               <Ionicons
                 name="location-outline"
                 size={16}
-                color={theme.iconFocused}
+                color={theme.dontKnow}
               />
             </Text>
           </Pressable>
 
           <View style={styles.heroTopRow}>
             <View style={styles.heroLeft}>
-              {/* this should be interactive */}
-              <Ionicons 
+              <Ionicons
                 name={PRAYER_ICONS[nextPrayer.name]}
                 size={26}
-                color={theme.iconFocused}
+                color={theme.dontKnow}
               />
               <Text style={[styles.heroPrayer, { color: theme.title }]}>
                 {nextPrayer.name}
@@ -247,7 +253,7 @@ const Home = () => {
         <ThemedCard intensity={22} style={styles.timesCard}>
           {[
             ['Fajr', prayerTimes.Fajr, 'cloudy-night-outline'],
-            ['Sunrise', prayerTimes.Ishraq, 'partly-sunny-outline'],
+            ['Sunrise', prayerTimes.Sunrise, 'partly-sunny-outline'],
             ['Dhuhr', prayerTimes.Dhuhr, 'sunny-outline'],
             ['Asr', prayerTimes.Asr, 'partly-sunny-outline'],
             ['Maghrib', prayerTimes.Maghrib, 'cloudy-night-outline'],
@@ -274,14 +280,7 @@ const Home = () => {
   );
 };
 
-const PrayerRow = ({
-  name,
-  time,
-  icon,
-  theme,
-  enabled,
-  onToggle,
-}) => (
+const PrayerRow = ({ name, time, icon, theme, enabled, onToggle }) => (
   <View style={styles.prayerRow}>
     <View style={styles.prayerLeft}>
       <Ionicons name={icon} size={26} color={theme.icon} />
@@ -299,13 +298,12 @@ const PrayerRow = ({
         <Ionicons
           name={enabled ? 'notifications' : 'notifications-off-outline'}
           size={22}
-          color={enabled ? theme.iconFocused : theme.muted}
+          color={enabled ? theme.dontKnow : theme.muted}
         />
       </Pressable>
     </View>
   </View>
 );
-
 
 export default Home;
 
@@ -324,7 +322,6 @@ const styles = StyleSheet.create({
     elevation: 20,
     marginTop: 6,
     marginBottom: 5,
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)'
   },
   heroLabel: {
     fontSize: 14,
@@ -361,7 +358,6 @@ const styles = StyleSheet.create({
     paddingVertical: 23,
     paddingHorizontal: 33,
     marginTop: 25,
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)'
   },
   prayerRow: {
     flexDirection: 'row',
@@ -383,9 +379,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   prayerRight: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 17,
-},
-
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 17,
+  },
 });

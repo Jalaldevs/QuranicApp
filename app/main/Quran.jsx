@@ -29,10 +29,29 @@ const Quran = () => {
   const [loading, setLoading] = useState(false);
   const [languagesMenu, setLanguagesMenu] = useState(false);
   const [selectedTranslation, setSelectedTranslation] = useState('english');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isAyahPlaying, setIsAyahPlaying] = useState(false);
+  const [playingAyahId, setPlayingAyahId] = useState(null);
+
 
   const [fontsLoaded] = useFonts({
     UthmanicHafs: require('../../assets/fonts/KFGQPC-Uthmanic-Script-HAFS-Regular.otf'),
   });
+
+  const handlePlayAudio = () => {
+    setIsPlaying(prev => !prev);
+    // aquí luego conectas expo-av o tu sistema de audio
+  };
+  const handleAyahAudio = (ayahId) => {
+    setPlayingAyahId(prev =>
+      prev === ayahId ? null : ayahId
+    );
+    // later: play / stop audio here with expo-av
+  };
+
+  useEffect(() => {
+    setPlayingAyahId(null);
+  }, [selectedSurah]);
 
     const fetchSurah = async (surahId, language) => {
 
@@ -104,7 +123,7 @@ const Quran = () => {
       <Header from='Quran'/>
       <ThemedView style={styles.container}>
         {/* SURAH SELECTOR */}
-        <View>
+        <View style={styles.selectorContainer}>
           <FlatList
             horizontal
             data={surahs}
@@ -119,7 +138,7 @@ const Quran = () => {
                   style={[
                     styles.surahButton,
                     { 
-                      borderColor: scheme === 'dark' ? '#4b5563' : '#CCC',
+                      borderColor: scheme === 'dark' ? '#4b5563' : '#ccc',
                       backgroundColor: scheme === 'dark' && !active ? '#1e293b' : 'transparent'
                     },
                     active && {
@@ -133,7 +152,7 @@ const Quran = () => {
                     { 
                       color: active 
                         ? (scheme === 'dark' ? '#fff' : theme.text)
-                        : (scheme === 'light' ? '#e2e8f0' : theme.text)
+                        : (scheme === 'light' ? '#000000' : theme.text)
                     }
                   ]}>
                     {item.id}. {item.latin}
@@ -143,10 +162,21 @@ const Quran = () => {
             }}
           />
         </View>
-
-        <Text style={[styles.surahTitle, { color: theme.primary }]}>
-          Surah {selectedSurah.latin}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={[styles.surahTitle, { color: theme.text }]}>
+            Surah {selectedSurah.latin}
+          </Text>
+          <TouchableOpacity
+            onPress={handlePlayAudio}
+              style={styles.iconButton}
+            >
+              <MaterialIcons
+                name={isPlaying ? 'pause' : 'volume-up'}
+                size={28}
+                color={scheme === 'dark' ? '#60a5fa' : theme.primary}
+              />
+          </TouchableOpacity>
+        </View>
 
         {/* AYAH LIST */}
         <ThemedCard intensity={18} style={styles.card}>
@@ -158,21 +188,61 @@ const Quran = () => {
               keyExtractor={(item) => item.id.toString()}
               contentContainerStyle={{ paddingBottom: 30, gap: 18 }}
               renderItem={({ item }) => (
-                <View style={styles.ayahContainer}>
+                  <View
+                    style={[
+                      styles.ayahContainer,
+                      playingAyahId === item.id && {
+                        backgroundColor:
+                          scheme === 'dark'
+                            ? 'rgba(96,165,250,0.12)'
+                            : 'rgba(25,118,210,0.08)',
+                      },
+                    ]}
+                  >
                   <View style={styles.ayahHeader}>
                     <Text style={[styles.ayahNumber, { color: theme.muted }]}>
                       {item.id}
                     </Text>
-                    <TouchableOpacity
-                      onPress={() => setLanguagesMenu(!languagesMenu)}
-                      style={styles.iconButton}
-                    >
-                    <MaterialIcons 
-                      name="public" 
-                      size={24} 
-                      color={scheme === 'dark' ? '#60a5fa' : theme.primary} 
-                    />
-                    </TouchableOpacity>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                      <TouchableOpacity
+                        style={styles.iconButton}
+                      >
+                          <MaterialIcons
+                            name='share'
+                            size={24}
+                            color={scheme === 'dark' ? '#60a5fa' : theme.primary}
+                          />
+                      </TouchableOpacity>
+                      {/* Reproducir audio */}
+                        <TouchableOpacity
+                          style={styles.iconButton}
+                          disabled={item.isBasmala}
+                          onPress={() => handleAyahAudio(item.id)}
+                        >
+                          <MaterialIcons
+                            name={playingAyahId === item.id ? 'pause' : 'volume-up'}
+                            size={28}
+                            color={
+                              item.isBasmala
+                                ? theme.muted
+                                : scheme === 'dark'
+                                ? '#60a5fa'
+                                : theme.primary
+                            }
+                          />
+                        </TouchableOpacity>
+                      {/* Selector de idioma */}
+                      <TouchableOpacity
+                        onPress={() => setLanguagesMenu(!languagesMenu)}
+                        style={styles.iconButton}
+                      >
+                        <MaterialIcons
+                          name="public"
+                          size={24}
+                          color={scheme === 'dark' ? '#60a5fa' : theme.primary}
+                        />
+                      </TouchableOpacity>
+                    </View>
                   </View>
 
                   <Text
@@ -203,7 +273,7 @@ const Quran = () => {
           onRequestClose={() => setSearchMenu(false)}
         >
           <ThemedView style={styles.languagesOverlay}>
-              <ThemedCard intensity={28} style={styles.languagesSheet}>
+              <ThemedCard style={[styles.languagesSheet, {backgroundColor: theme.languagesDontKnow}]}>
                 <View style={[styles.languagesHeader, { borderBottomColor: theme.muted }]}>
                   <Text style={[styles.languagesTitle, { color: theme.text }]}>Translations</Text>
                   <TouchableOpacity onPress={() => setLanguagesMenu(false)}>
@@ -222,7 +292,7 @@ const Quran = () => {
                         styles.languagesItem,
                         { backgroundColor: scheme === 'dark' ? '#374151' : '#f3f4f6' },
                         item === selectedTranslation && {
-                          backgroundColor: scheme === 'dark' ? '#1e3a8a' : '#dbeafe',
+                          backgroundColor: scheme === 'dark' ? '#1e3a8a' : '#c7dcf8',
                         },
                       ]}
                       onPress={() => {
@@ -246,14 +316,15 @@ const Quran = () => {
 export default Quran;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingVertical: 10, paddingHorizontal: 16, gap: 16 },
-  selectorScroll: { flexDirection: 'row', gap: 10 },
+  container: { flex: 1, paddingVertical: 10, paddingHorizontal: 2},
+  selectorScroll: { flexDirection: 'row' },
 
   surahButton: {
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 16,
     borderWidth: 1,
+    marginRight: 12
   },
   surahButtonText: { fontSize: 14, fontWeight: '600' },
 
@@ -265,6 +336,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     textAlign: 'center',
+    marginVertical: 21
+  },
+  selectorContainer: {
+    paddingLeft: 15
   },
 
   card: {
@@ -275,10 +350,10 @@ const styles = StyleSheet.create({
   },
 
   ayahContainer: {
-    gap: 6,
     borderBottomWidth: 0.5,
     borderBottomColor: '#CCC',
-    paddingBottom: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 6
   },
   ayahHeader: {
     flexDirection: 'row',

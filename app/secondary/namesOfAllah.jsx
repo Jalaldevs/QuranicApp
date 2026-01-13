@@ -38,13 +38,9 @@ const NamesOfAllah = () => {
     <ThemedView style={styles.container}>
       <SecondaryHeader />
 
-      <Text style={[styles.title, { color: theme.primary }]}>
-        Asma’ul Husna — 99 Names of Allah
-      </Text>
-
       <ThemedCard intensity={15} style={styles.card}>
         {loading ? (
-          <Text style={[styles.loadingText, { color: theme.muted }]}>
+          <Text style={[styles.loadingText, { color: theme.dontKnow }]}>
             Loading...
           </Text>
         ) : (
@@ -54,8 +50,8 @@ const NamesOfAllah = () => {
             contentContainerStyle={{ gap: 14, paddingBottom: 20 }}
             renderItem={({ item }) => (
               <View style={[styles.nameItem, { borderBottomColor: theme.border }]}>
-                <Text style={[styles.arabic, { color: theme.text }]}>{item.arabic}</Text>
-                <Text style={[styles.latin, { color: theme.muted }]}>{item.latin}</Text>
+                <Text style={[styles.arabic, { color: theme.dontKnow }]}>{item.arabic}</Text>
+                <Text style={[styles.latin, { color: theme.dontKnow }]}>{item.latin}</Text>
               </View>
             )}
           />
@@ -70,9 +66,6 @@ export default NamesOfAllah;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    gap: 16,
   },
   title: {
     fontSize: 20,
@@ -82,7 +75,7 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     borderRadius: 22,
-    padding: 18,
+    paddingHorizontal: 18,
     backgroundColor: 'transparent',
   },
   loadingText: {

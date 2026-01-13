@@ -275,6 +275,7 @@ export default function Sunnah() {
         <FlatList
           horizontal
           data={sections}
+          style={styles.secondRow}
           keyExtractor={(item) => item.id}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.sectionList}
@@ -285,6 +286,7 @@ export default function Sunnah() {
                 onPress={() => setSelectedSection(item.id)}
                 style={[
                   styles.bookButton,
+                  styles.bookSecond,
                   { 
                     borderColor: scheme === 'dark' ? '#4b5563' : '#ccc',
                     backgroundColor: scheme === 'dark' && !active ? '#1e293b' : 'transparent'
@@ -328,7 +330,17 @@ export default function Sunnah() {
                   <Text style={[styles.hadithNumber, { color: theme.muted }]}>
                     {item.hadithnumber}
                   </Text>
-                  <TouchableOpacity
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                    <TouchableOpacity
+                      style={styles.iconButton}
+                    >
+                        <MaterialIcons
+                          name='share'
+                          size={24}
+                          color={scheme === 'dark' ? '#60a5fa' : theme.primary}
+                        />
+                    </TouchableOpacity>
+                    <TouchableOpacity
                       onPress={() => setLanguagesMenu(!languagesMenu)}
                       style={styles.iconButton}
                     >
@@ -338,6 +350,7 @@ export default function Sunnah() {
                       color={scheme === 'dark' ? '#60a5fa' : theme.primary} 
                     />
                     </TouchableOpacity>
+                  </View>
                 </View>
 
               {/* Arabic */}
@@ -381,7 +394,7 @@ export default function Sunnah() {
             onRequestClose={() => setSearchMenu(false)}
           >
             <ThemedView style={styles.languagesOverlay}>
-              <ThemedCard intensity={28} style={styles.languagesSheet}>
+              <ThemedCard style={[styles.languagesSheet, {backgroundColor: theme.languagesDontKnow}]}>
                 <View style={[styles.languagesHeader, { borderBottomColor: theme.muted }]}>
                   <Text style={[styles.languagesTitle, { color: theme.text }]}>Translations</Text>
                   <TouchableOpacity onPress={() => setLanguagesMenu(false)}>
@@ -401,7 +414,7 @@ export default function Sunnah() {
                         styles.languagesItem,
                         { backgroundColor: scheme === 'dark' ? '#374151' : '#f3f4f6' },
                         item === selectedTranslation && {
-                          backgroundColor: scheme === 'dark' ? '#1e3a8a' : '#dbeafe',
+                          backgroundColor: scheme === 'dark' ? '#1e3a8a' : '#c7dcf8',
                         },
                       ]}
                       onPress={() => {
@@ -423,9 +436,9 @@ export default function Sunnah() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, gap: 10 },
+  container: { flex: 1},
 
-  selectorsWrapper: { gap: 10 },
+  selectorsWrapper: { paddingVertical: 10 },
 
   bookSelector: {
     gap: 14,
@@ -438,12 +451,22 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
   },
+  secondRow: {
+    marginTop: 10,
+  },
+  bookSecond: {
+    marginRight: 10
+  },
 
   bookText: { fontSize: 14, fontWeight: '600' },
 
-  sectionList: { gap: 10, paddingHorizontal: 16 },
+  sectionList: { paddingHorizontal: 16 },
 
   sectionText: { fontSize: 13 },
+
+  iconButton: {
+    paddingLeft: 8
+  },
 
   hadithCard: {
     flex: 1,
@@ -458,7 +481,6 @@ const styles = StyleSheet.create({
     paddingLeft: 8
   },
   hadithContainer: {
-    gap: 8,
     borderBottomWidth: 0.5,
     borderBottomColor: '#ccc',
     paddingBottom: 16,
@@ -474,7 +496,7 @@ const styles = StyleSheet.create({
     lineHeight: 45,
     textAlign: 'right',
     paddingLeft: 50,
-    paddingTop: 12,
+    paddingTop: 18,
   },
 
   translationText: {

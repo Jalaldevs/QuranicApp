@@ -14,7 +14,9 @@ const Colors = {
     border: "#1E293B",          // subtle card border / divider
     icon: "#94A3B8",            // inactive icon color
     iconFocused: "#38BDF8",     // active icon color
-    shadow: "rgba(56, 189, 248, 0.15)", // soft blue glow for card shadows
+    shadow: "rgba(56, 189, 248, 0.15)",
+    dontKnow: "#2F6FED", // soft blue glow for card shadows
+    languagesDontKnow: "#060420",
   },
 
   light: {
@@ -28,6 +30,8 @@ const Colors = {
     icon: "#475569",
     iconFocused: "#2F6FED",
     shadow: "rgba(56, 189, 248, 0.15)",
+    dontKnow: "#2F6FED",
+    languagesDontKnow: "#e4e4ed",
   },
 };
 

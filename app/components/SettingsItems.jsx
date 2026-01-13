@@ -16,7 +16,7 @@ const SettingsItem = ({ icon, label, onPress }) => {
         ]}
         >
         <View style={styles.left}>
-            <Ionicons name={icon} size={20} color={theme.iconFocused} />
+            <Ionicons name={icon} size={20} color={theme.dontKnow} />
             <Text style={[styles.label, { color: theme.text }]}>
             {label}
             </Text>

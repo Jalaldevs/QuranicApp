@@ -46,8 +46,8 @@ const Settings = () => {
         <SectionHeader title="About" />
         <ThemedCard style={styles.card}>
           <SettingsItem
-            icon="mail"
-            label="Contact Developer"
+            icon="person"
+            label="App Developer"
             onPress={() => router.push('/acknowledgments')}
           />
           <SettingsItem

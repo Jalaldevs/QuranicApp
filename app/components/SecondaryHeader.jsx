@@ -57,16 +57,16 @@ const styles = StyleSheet.create({
     backBtn: {
         flexDirection: 'row',
         alignItems: 'center',
-        color: '#0647fbff'
+        color: 'rgb(97, 139, 255)'
     },
     backIcon: {
-        color: '#0647fbff'
+        color: 'rgb(97, 139, 255)'
     },
     backText: {
         fontSize: 20,
         marginLeft: 4,
         fontWeight: '600',
-        color: '#0647fbff'
+        color: '#3478ff'
     },
     title: {
         fontSize: 20,
