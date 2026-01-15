@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   TouchableOpacity,
+  Pressable,
   StyleSheet,
   StatusBar,
   useColorScheme,
@@ -10,11 +11,14 @@ import {
   Text,
   TextInput,
   Modal,
+  FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../constants/Colors';
 import ThemedView from '../components/ThemedView';
 import { Link, usePathname } from 'expo-router';
+import surahs from '../constants/surahs';
+import { booksFrontEnd, BOOKS } from '../constants/sunnahBooks';
 
 const Header = () => {
   const scheme = useColorScheme();
@@ -22,6 +26,9 @@ const Header = () => {
 
   const [searchMenu, setSearchMenu] = useState(false);
   const [searchValue, setSearchValue] = useState('');
+  const [searchSource, setSearchSource] = useState('quran');
+  const [quranSearched, setQuranSearched] = useState([]);
+
   const inputRef = useRef(null);
 
   const pathname = usePathname();
@@ -29,6 +36,23 @@ const Header = () => {
   useEffect(() => {
     setSearchMenu(false);
   }, [pathname]);
+
+  const inputIsMatching = (value) => {
+    if (searchSource === 'quran') {
+      const results = surahs.filter((s) =>
+        s.latin.toLowerCase().includes(value.toLowerCase())
+      );
+      setQuranSearched(results);
+    }
+  };
+
+  useEffect(() => {
+    if (searchValue.trim().length > 0) {
+      inputIsMatching(searchValue);
+    } else {
+      setQuranSearched([]);
+    }
+  }, [searchValue, searchSource]);
 
   return (
     <>
@@ -52,13 +76,13 @@ const Header = () => {
             >
               <Ionicons name="search-outline" size={24} color={theme.text} />
             </TouchableOpacity>
+
             <Link href={`/secondary/scheme`} asChild>
-              <TouchableOpacity
-                style={styles.icon}
-              >
+              <TouchableOpacity style={styles.icon}>
                 <Ionicons name="moon-outline" size={24} color={theme.text} />
               </TouchableOpacity>
             </Link>
+
             <Link href={`/secondary/settings?back=${pathname}`} asChild>
               <TouchableOpacity style={[styles.icon, styles.headerIcon]}>
                 <Ionicons name="settings-outline" size={24} color={theme.text} />
@@ -67,7 +91,6 @@ const Header = () => {
           </View>
         </ThemedView>
       </SafeAreaView>
-      
 
       {/* Search Modal */}
       <Modal
@@ -108,10 +131,16 @@ const Header = () => {
               <TextInput
                 ref={inputRef}
                 autoFocus
-                placeholder='Search...'
+                placeholder={
+                  searchSource === 'quran'
+                    ? 'Search Qur’an...'
+                    : 'Search Sunnah...'
+                }
                 placeholderTextColor={theme.muted}
                 value={searchValue}
-                onChangeText={setSearchValue}
+                onChangeText={(text) => {
+                  setSearchValue(text);
+                }}
                 style={[
                   styles.input,
                   { color: theme.text },
@@ -127,31 +156,110 @@ const Header = () => {
               </TouchableOpacity>
             </View>
 
+            {/* SOURCE SELECTOR */}
+            <View style={styles.sourceSelector}>
+              {/* QURAN */}
+              <Pressable
+                onPress={() => setSearchSource('quran')}
+                style={({ pressed }) => [
+                  styles.sourceButton,
+                  {
+                    transform: [{ scale: pressed ? 0.96 : 1 }],
+                    borderColor: scheme === 'dark' ? '#4b5563' : '#ccc',
+                    backgroundColor:
+                      scheme === 'dark' && searchSource !== 'quran'
+                        ? '#1e293b'
+                        : 'transparent',
+                  },
+                  searchSource === 'quran' && {
+                    borderColor: '#1976d2',
+                    backgroundColor:
+                      scheme === 'dark' ? '#1e3a8a' : '#e3f2fd',
+                  },
+                ]}
+              >
+                <Text
+                  style={{
+                    color:
+                      searchSource === 'quran'
+                        ? scheme === 'dark'
+                          ? '#fff'
+                          : '#1976d2'
+                        : theme.text,
+                    fontWeight: '600',
+                  }}
+                >
+                  Qur’an
+                </Text>
+              </Pressable>
+
+              {/* SUNNAH */}
+              <Pressable
+                onPress={() => setSearchSource('sunnah')}
+                style={({ pressed }) => [
+                  styles.sourceButton,
+                  {
+                    transform: [{ scale: pressed ? 0.96 : 1 }],
+                    borderColor: scheme === 'dark' ? '#4b5563' : '#ccc',
+                    backgroundColor:
+                      scheme === 'dark' && searchSource !== 'sunnah'
+                        ? '#1e293b'
+                        : 'transparent',
+                  },
+                  searchSource === 'sunnah' && {
+                    borderColor: '#1976d2',
+                    backgroundColor:
+                      scheme === 'dark' ? '#1e3a8a' : '#e3f2fd',
+                  },
+                ]}
+              >
+                <Text
+                  style={{
+                    color:
+                      searchSource === 'sunnah'
+                        ? scheme === 'dark'
+                          ? '#fff'
+                          : '#1976d2'
+                        : theme.text,
+                    fontWeight: '600',
+                  }}
+                >
+                  Sunnah
+                </Text>
+              </Pressable>
+            </View>
+
             <View style={{ flex: 1, padding: 16 }}>
-              {searchValue.length > 0 ? (
-                <Text style={{ color: theme.text }}>
-                  Searching for "{searchValue}"
-                </Text>
-              ) 
-              : 
-              <View>
-                <Text style={[styles.searchExamples, { color: theme.text }]}>
-                  Examples...
-                </Text>
-                <Text style={[styles.searchExamples, { color: theme.text }]}>
-                  Al-Fatiha, Surah 55, 6:23
-                </Text>
-                <Text style={[styles.searchExamples, { color: theme.text }]}>
-                  bukhari 552, nasai 123, abudawud 598,
-                </Text>
-                <Text style={[styles.searchExamples, { color: theme.text }]}>
-                  muslim 123, tirmidhi 332, ibnmajah 52,
-                </Text>
-                <Text style={[styles.searchExamples, { color: theme.text }]}>
-                  malik 61, nawawi 31, qudsi 10
-                </Text>
-              </View>
-              }
+              {searchValue.length > 0 
+              && searchSource === 'quran' ? (
+                <FlatList
+                  data={quranSearched}
+                  keyExtractor={(item) => item.id.toString()}
+                  renderItem={({ item }) => (
+                    <Text>
+                      {item.latin}
+                    </Text>
+                )}
+                />
+              ) : (
+                <View>
+                  <Text style={[styles.searchExamples, { color: theme.text }]}>
+                    Examples...
+                  </Text>
+                  <Text style={[styles.searchExamples, { color: theme.text }]}>
+                    Al-Fatiha, Surah 55, 6:23
+                  </Text>
+                  <Text style={[styles.searchExamples, { color: theme.text }]}>
+                    bukhari 552, nasai 123, abudawud 598,
+                  </Text>
+                  <Text style={[styles.searchExamples, { color: theme.text }]}>
+                    muslim 123, tirmidhi 332, ibnmajah 52,
+                  </Text>
+                  <Text style={[styles.searchExamples, { color: theme.text }]}>
+                    malik 61, nawawi 31, qudsi 10
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
         </ThemedView>
@@ -182,7 +290,7 @@ const styles = StyleSheet.create({
   icon: {
     justifyContent: 'center',
     alignItems: 'center',
-    paddingRight: 10
+    paddingRight: 10,
   },
   headerIcon: {
     marginLeft: 8,
@@ -204,13 +312,28 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomWidth: 0.5,
   },
-  searchExamples:{
-    marginBottom: 7
+  searchExamples: {
+    marginBottom: 7,
   },
   input: {
     flex: 1,
     fontSize: 18,
     paddingLeft: 8,
     fontWeight: '500',
+  },
+
+  /* selector styles */
+  sourceSelector: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    gap: 10,
+  },
+  sourceButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 14,
+    alignItems: 'center',
+    borderWidth: 1,
   },
 });

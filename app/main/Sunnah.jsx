@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Modal
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFonts } from 'expo-font';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Header from '../components/Header';
@@ -16,41 +17,18 @@ import ThemedView from '../components/ThemedView';
 import ThemedCard from '../components/ThemedCard';
 import Colors from '../constants/Colors';
 import { useNavigation } from 'expo-router';
+import { booksFrontEnd, BOOKS } from '../constants/sunnahBooks';
 
-const BOOKS = [
-  'abudawud',
-  'bukhari',
-  'muslim',
-  'nasai',
-  'tirmidhi',
-  'ibnmajah',
-  'malik',
-  'nawawi',
-  'qudsi',
-];
-
-const LANGUAGE_CODE_MAP = {
-  English: 'eng',
-  French: 'fra',
-  Urdu: 'urd',
-  Turkish: 'tur',
-  Indonesian: 'ind',
-  Bengali: 'ben',
-  Russian: 'rus',
-  Tamil: 'tam',
+export const LANGUAGE_CODE_MAP = {
+    English: 'eng',
+    French: 'fra',
+    Urdu: 'urd',
+    Turkish: 'tur',
+    Indonesian: 'ind',
+    Bengali: 'ben',
+    Russian: 'rus',
+    Tamil: 'tam',
 };
-
-const booksFrontEnd = [
-  'Sunan Abu Dawud (سنن أبو داود)',
-  'Saheeh al-Bukhari (صحيح البخاري)',
-  'Saheeh Muslim (صحيح مسلم)',
-  'Sunan an-Nasai (سنن النسائي)',
-  'Jami At-Tirmidhi (جامع الترمذي)',
-  'Sunan Ibn Majah (سنن ابن ماجه)',
-  'Muwatta Malik (موطأ مالك)',
-  'Forty Hadith of an-Nawawi (الأربعون النووية)',
-  'Forty Hadith Qudsi (الأحاديث القدسية)',
-];
 
 const sectionsFrontEnd = []
 
@@ -64,6 +42,8 @@ const cleanHadithText = (text) => {
     .replace(/&nbsp;/gi, ' ')
     .trim();
 };
+
+const STORAGE_TRANSLATION_KEY = '@sunnah:selectedTranslation';
 
 export default function Sunnah() {
   const scheme = useColorScheme();
@@ -84,6 +64,16 @@ export default function Sunnah() {
   });
 
   const [avaliableTranlations, setAvaliableTranslations] = useState([]);
+
+  useEffect(() => {
+  const loadSavedTranslation = async () => {
+    const saved = await AsyncStorage.getItem(STORAGE_TRANSLATION_KEY);
+    if (saved) {
+      setSelectedTranslation(saved);
+    }
+  };
+  loadSavedTranslation();
+}, []);
 
   const fetchAvaliableLanguages = async (selectedBook) => {
   try {
@@ -113,7 +103,6 @@ export default function Sunnah() {
     console.error('Failed to load languages', e);
   }
 };
-
 
     useEffect(() => {
       fetchAvaliableLanguages(selectedBook);
@@ -159,39 +148,35 @@ export default function Sunnah() {
   }, [selectedBook]);
 
   useEffect(() => {
-    const fetchTranslation = async () => {
-      try {
-        const langCode = LANGUAGE_CODE_MAP[selectedTranslation];
-        if (!langCode) return;
-
-        const res = await fetch(
-          `https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/${langCode}-${selectedBook}.min.json`
-        );
-
-        if (!res.ok && selectedTranslation !== 'English') {
-          const fallbackRes = await fetch(
-            `https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/eng-${selectedBook}.min.json`
-          );
-
-          if (fallbackRes.ok) {
-            const data = await fallbackRes.json();
-            setTranslations(data.hadiths || []);
-            setSelectedTranslation('English');
-          } else {
-            setTranslations([]);
-          }
-          return;
-        }
-
-        const data = await res.json();
-        setTranslations(data.hadiths);
-      } catch (e) {
-        console.error('Failed to load translation', e);
+      const fetchTranslation = async () => {
+    try {
+      if (!avaliableTranlations.includes(selectedTranslation)) {
+        // fallback to English if chosen translation is not available
+        setSelectedTranslation('English');
+        return;
       }
-    };
 
+      const langCode = LANGUAGE_CODE_MAP[selectedTranslation];
+      const res = await fetch(
+        `https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/${langCode}-${selectedBook}.min.json`
+      );
+
+      if (!res.ok) {
+        setTranslations([]);
+        return;
+      }
+
+      const data = await res.json();
+      setTranslations(data.hadiths || []);
+    } catch (e) {
+      console.error('Failed to load translation', e);
+      setTranslations([]);
+    }
+  };
+
+    if (avaliableTranlations.length === 0) return;
     fetchTranslation();
-  }, [selectedBook, selectedTranslation]);
+  }, [selectedBook, selectedTranslation, avaliableTranlations]);
 
 
   /** Map translations by hadith number */
@@ -391,7 +376,7 @@ export default function Sunnah() {
             visible={languagesMenu}
             animationType="slide"
             transparent={true}
-            onRequestClose={() => setSearchMenu(false)}
+            onRequestClose={() => setLanguagesMenu(false)}
           >
             <ThemedView style={styles.languagesOverlay}>
               <ThemedCard style={[styles.languagesSheet, {backgroundColor: theme.languagesDontKnow}]}>
@@ -417,9 +402,16 @@ export default function Sunnah() {
                           backgroundColor: scheme === 'dark' ? '#1e3a8a' : '#c7dcf8',
                         },
                       ]}
-                      onPress={() => {
-                        setSelectedTranslation(item);
-                        setLanguagesMenu(false);
+                      onPress={async () => {
+                        try {
+                          if (item !== selectedTranslation) {
+                            await AsyncStorage.setItem(STORAGE_TRANSLATION_KEY, item);
+                            setSelectedTranslation(item);
+                          }
+                          setLanguagesMenu(false);
+                        } catch (e) {
+                          console.error('Failed to save translation', e);
+                        }
                       }}
                     >
                       <Text style={[styles.languagesText, { color: theme.text }]}>{item}</Text>

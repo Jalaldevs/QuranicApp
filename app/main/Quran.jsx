@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import translationsKeys from '../constants/transaltionsKeys';
 import Header from '../components/Header';
 import ThemedView from '../components/ThemedView';
@@ -19,6 +19,8 @@ import ThemedCard from '../components/ThemedCard';
 import Colors from '../constants/Colors';
 import surahs from '../constants/surahs';
 import { useNavigation } from 'expo-router';
+
+const STORAGE_TRANSLATION_KEY = '@quran:selectedTranslation';
 
 const Quran = () => {
   const scheme = useColorScheme();
@@ -48,6 +50,22 @@ const Quran = () => {
     );
     // later: play / stop audio here with expo-av
   };
+
+  useEffect(() => {
+  const loadSavedTranslation = async () => {
+    try {
+      const saved = await AsyncStorage.getItem(STORAGE_TRANSLATION_KEY);
+      if (saved) {
+        setSelectedTranslation(saved);
+      }
+    } catch (e) {
+      console.error('Failed to load translation', e);
+    }
+  };
+
+  loadSavedTranslation();
+}, []);
+
 
   useEffect(() => {
     setPlayingAyahId(null);
@@ -295,9 +313,16 @@ const Quran = () => {
                           backgroundColor: scheme === 'dark' ? '#1e3a8a' : '#c7dcf8',
                         },
                       ]}
-                      onPress={() => {
-                        setSelectedTranslation(item);
-                        setLanguagesMenu(false);
+                      onPress={async () => {
+                        try {
+                          if (item !== selectedTranslation) {
+                            await AsyncStorage.setItem(STORAGE_TRANSLATION_KEY, item);
+                            setSelectedTranslation(item);
+                          }
+                          setLanguagesMenu(false);
+                        } catch (e) {
+                          console.error('Failed to save translation', e);
+                        }
                       }}
                     >
                       <Text style={[styles.languagesText, { color: theme.text }]}>{item}</Text>
